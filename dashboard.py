@@ -11,10 +11,12 @@ import pandas as pd
 import plotly.figure_factory as ff
 import numpy as np
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+external_stylesheets_boostrap=[dbc.themes.BOOTSTRAP]
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
@@ -106,9 +108,9 @@ app.layout = html.Div(children=[
 
         html.Div(id="price-distribution", children=[
 
-                html.Div(className="plot-container", children=[
+                dbc.Row([
 
-                    html.Div(className="left-container", children=[
+                    dbc.Col(width=4, className="left-container", children=[
 
                             html.Div(className="plot-name", children=[
 
@@ -131,19 +133,16 @@ app.layout = html.Div(children=[
 
                                 ])
 
-                        ])
+                        ]),
+                        dbc.Col(width=8, className="right-container", children=[
+                            html.Div(className="hist-plot", children=[
+                                    dcc.Graph(
+                                        id='hist-graph-1',
 
-                    ]),
-
-                    html.Div(className="right-container", children=[
-                        html.Div(className="hist-plot", children=[
-                                dcc.Graph(
-                                    id='hist-graph-1',
-                                    figure=fig
-                                )
+                                    )
+                                ])
                             ])
-                        ])
-
+                    ]),
             ]),
     ])
 ])
