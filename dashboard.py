@@ -59,10 +59,10 @@ fig = px.box(df, x="price", color="Borough")
 # Histogram callback
 @app.callback(
     dash.dependencies.Output('hist-graph-1', 'figure'),
-    [dash.dependencies.Input('demo-dropdown', 'value')])
-def update_output(value):
-
-    fig = px.box(df, x=value, color="Borough")
+    [dash.dependencies.Input('x-box-dropdown', 'value'),
+    dash.dependencies.Input('y-box-dropdown', 'value')])
+def update_output(x_value, y_value):
+    fig = px.box(df, x=x_value, color=y_value, height=622)
     fig.update_layout(transition_duration=1000, transition_easing="cubic-in-out")
 
     return fig
@@ -122,13 +122,20 @@ app.layout = html.Div(children=[
                                 ]),
                             html.Div(className="plot-selectors", children=[
                                     html.Div(className="box", children=[
-                                        dcc.Dropdown(id='demo-dropdown',
+                                        dcc.Dropdown(id='x-box-dropdown',
                                             options=[
                                                 {'label': 'Price', 'value': 'price'},
                                                 {'label': 'Number of reviews', 'value': 'number_of_reviews'},
                                                 {'label': 'Accomodates', 'value': 'accommodates'}
                                                 ],
-                                                value='price')
+                                                value='price'),
+                                        dcc.Dropdown(id='y-box-dropdown',
+                                            options=[
+                                                {'label': 'Borough', 'value': 'Borough'},
+                                                {'label': 'Room type', 'value': 'room_type'},
+                                                {'label': 'Host is superhost', 'value': 'host_is_superhost'}
+                                                ],
+                                                value='Borough'),
                                     ])
 
                                 ])
