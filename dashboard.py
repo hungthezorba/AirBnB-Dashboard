@@ -19,13 +19,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
 
-AirBnB_data = "./cleaned-AirBnB.csv"
+AirBnB_data = "./data/cleaned-AirBnB.csv"
 
-df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None, 
+df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
   names =['description', 'neighborhood_overview', 'host_since', 'host_location',
    'host_about', 'host_response_time', 'host_response_rate', 'host_acceptance_rate',
     'host_is_superhost', 'host_neighbourhood', 'host_listings_count', 'host_total_listings_count',
-     'host_verifications', 'host_has_profile_pic', 'host_identity_verified', 'neighbourhood', 'neighbourhood_cleansed', 
+     'host_verifications', 'host_has_profile_pic', 'host_identity_verified', 'neighbourhood', 'neighbourhood_cleansed',
      'Borough', 'latitude', 'longitude', 'property_type', 'room_type', 'accommodates', 'bathrooms_text',
       'bedrooms', 'beds', 'amenities', 'price', 'minimum_nights', 'maximum_nights', 'minimum_minimum_nights', 'maximum_minimum_nights',
        'minimum_maximum_nights', 'maximum_maximum_nights', 'minimum_nights_avg_ntm', 'maximum_nights_avg_ntm', 'has_availability', 'availability_30',
@@ -36,16 +36,6 @@ df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
 
 
 # Create price array of each neighbourhood_group_cleansed
-
-g1 = df[df['Borough'] == "Manhattan"]['price'].to_list()
-g2 = df[df['Borough'] == "Brooklyn"]['price'].to_list()
-g3 = df[df['Borough'] == "Queens"]['price'].to_list()
-g4 = df[df['Borough'] == "Staten Island"]['price'].to_list()
-g5 = df[df['Borough'] == "Bronx"]['price'].to_list()
-
-
-priceData = [g1, g2, g3, g4, g5]
-
 
 group_labels=["Manhattan", "Brooklyn", "Queens", "Staten Island", "Bronx"]
 
@@ -61,7 +51,20 @@ map_figure = px.scatter_mapbox(df, lat=df['latitude'], lon=df['longitude'],
                                 )
 
 
-fig = ff.create_distplot(priceData, group_labels, bin_size=.2, show_curve=False)
+fig = px.box(df, x="price", color="Borough")
+
+
+# Histogram callback
+@app.callback(
+    dash.dependencies.Output('hist-graph-1', 'figure'),
+    [dash.dependencies.Input('demo-dropdown', 'value')])
+def update_output(value):
+
+    fig = px.box(df, x=value, color="Borough")
+    fig.update_layout(transition_duration=1000, transition_easing="cubic-in-out")
+
+    return fig
+
 
 app.layout = html.Div(children=[
     html.Section(className="header", children=[
@@ -84,7 +87,7 @@ app.layout = html.Div(children=[
 
             html.Div(className="heading-name", children=[
 
-                    html.H4(children="Map of AirBnB in New York City")
+                    html.H4(children="I. Map of AirBnB in New York City")
 
                 ]),
 
@@ -109,21 +112,33 @@ app.layout = html.Div(children=[
 
                             html.Div(className="plot-name", children=[
 
-                                    html.H4(children="Price distributions")
+                                    html.H4(children="II. Data distributions in New York's Borough")
                                 ]),
                             html.Div(className="plot-description", children=[
 
-                                    html.P(children="Price distribution is visualized by histogram.")
+                                    html.P(children="Data distribution is visualized with boxplot.")
+                                ]),
+                            html.Div(className="plot-selectors", children=[
+                                    html.Div(className="box", children=[
+                                        dcc.Dropdown(id='demo-dropdown',
+                                            options=[
+                                                {'label': 'Price', 'value': 'price'},
+                                                {'label': 'Number of reviews', 'value': 'number_of_reviews'},
+                                                {'label': 'Accomodates', 'value': 'accommodates'}
+                                                ],
+                                                value='price')
+                                    ])
+
                                 ])
 
-                        ])    
+                        ])
 
                     ]),
 
                     html.Div(className="right-container", children=[
                         html.Div(className="hist-plot", children=[
                                 dcc.Graph(
-                                    id='example-graph',
+                                    id='hist-graph-1',
                                     figure=fig
                                 )
                             ])
