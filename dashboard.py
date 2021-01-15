@@ -43,25 +43,30 @@ group_labels=["Manhattan", "Brooklyn", "Queens", "Staten Island", "Bronx"]
 
 #NY map figure
 
+px.set_mapbox_access_token("pk.eyJ1IjoiaHVuZ3RoZXpvcmJhIiwiYSI6ImNrYnE4d3o4OTE3MjEydnB0cG44b3JiZzEifQ.M5kWTwGGuqA7WGBAdsIurQ")
+
 map_figure = px.scatter_mapbox(df, lat=df['latitude'], lon=df['longitude'],
                                  color="Borough",
                                  labels="Borough",
-                                zoom=10, mapbox_style="open-street-map",
+                                zoom=10, mapbox_style="mapbox://styles/hungthezorba/ckjwq978c106e17mynq5zyx9q",
                                 center=dict(lat=40.730610, lon=-73.935242),
-                                width=1048, height=622,
-                                size="price"
+                                height=620,
+                                size="price",
+                               hover_data=["price"],
+                                color_continuous_midpoint=1
                                 )
 
 
 fig = px.box(df, x="price", color="Borough")
 
 
-# Histogram callback
+# boxplot callback
 @app.callback(
     dash.dependencies.Output('hist-graph-1', 'figure'),
     [dash.dependencies.Input('x-box-dropdown', 'value'),
     dash.dependencies.Input('y-box-dropdown', 'value')])
 def update_output(x_value, y_value):
+    # boxplot figure
     fig = px.box(df, x=x_value, color=y_value, height=622)
     fig.update_layout(transition_duration=1000, transition_easing="cubic-in-out")
 
@@ -122,19 +127,21 @@ app.layout = html.Div(children=[
                                 ]),
                             html.Div(className="plot-selectors", children=[
                                     html.Div(className="box", children=[
-                                        dcc.Dropdown(id='x-box-dropdown',
+                                        dcc.Dropdown(className="dropdown-custom", id='x-box-dropdown',
                                             options=[
                                                 {'label': 'Price', 'value': 'price'},
                                                 {'label': 'Number of reviews', 'value': 'number_of_reviews'},
-                                                {'label': 'Accomodates', 'value': 'accommodates'}
-                                                ],
+                                                {'label': 'Accomodates', 'value': 'accommodates'},
+
+                                            ],
                                                 value='price'),
-                                        dcc.Dropdown(id='y-box-dropdown',
+                                        dcc.Dropdown(className="dropdown-custom", id='y-box-dropdown',
                                             options=[
                                                 {'label': 'Borough', 'value': 'Borough'},
                                                 {'label': 'Room type', 'value': 'room_type'},
-                                                {'label': 'Host is superhost', 'value': 'host_is_superhost'}
-                                                ],
+                                                {'label': 'Property', 'value': 'property_type'},
+                                                {'label': 'Super host', 'value': 'host_is_superhost'}
+                                            ],
                                                 value='Borough'),
                                     ])
 
