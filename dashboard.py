@@ -67,7 +67,15 @@ fig = px.box(df, x="price", color="Borough")
     dash.dependencies.Input('y-box-dropdown', 'value')])
 def update_output(x_value, y_value):
     # boxplot figure
-    fig = px.box(df, x=x_value, color=y_value, height=622)
+    fig = px.box(df, x=x_value, y=y_value,
+                 color="Borough" ,height=622,
+                 title="Distributions in New York's Borough",
+                 labels={
+                     x_value: " ".join(x_value.split("_")),
+                     y_value: " ".join(y_value.split("_"))
+                 }
+
+                 )
     fig.update_layout(transition_duration=1000, transition_easing="cubic-in-out")
 
     return fig
@@ -119,7 +127,7 @@ app.layout = html.Div(children=[
 
                             html.Div(className="plot-name", children=[
 
-                                    html.H4(children="II. Data distributions in New York's Borough")
+                                    html.H4(children="II. Distributions in New York's Borough")
                                 ]),
                             html.Div(className="plot-description", children=[
 
@@ -138,15 +146,14 @@ app.layout = html.Div(children=[
                                                 value='price'),
                                     ]),
                                     html.Div(className="box dropdown-custom", children=[
-                                        html.P(children="Legend"),
+                                        html.P(children="Y-axis"),
                                         dcc.Dropdown(id='y-box-dropdown',
                                                      options=[
-                                                         {'label': 'Borough', 'value': 'Borough'},
                                                          {'label': 'Room type', 'value': 'room_type'},
                                                          {'label': 'Property', 'value': 'property_type'},
                                                          {'label': 'Super host', 'value': 'host_is_superhost'}
                                                      ],
-                                            value='Borough')
+                                            value='room_type')
                                     ])
 
                                 ])
