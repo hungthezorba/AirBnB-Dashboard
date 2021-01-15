@@ -53,9 +53,17 @@ map_figure = px.scatter_mapbox(df, lat=df['latitude'], lon=df['longitude'],
                                 height=620,
                                 size="price",
                                hover_data=["price"],
-                                color_continuous_midpoint=1
+                                color_continuous_midpoint=1,
                                 )
-
+map_figure.update_layout(font_family="Courier New",
+                         font_size=14,
+                         title={
+                                'text': "Map of AirBnB in New York City",
+                                'x':0.45,
+                                'xanchor': 'center',
+                                'yanchor': 'top'
+                                },
+                         )
 
 fig = px.box(df, x="price", color="Borough")
 
@@ -76,7 +84,10 @@ def update_output(x_value, y_value):
                  }
 
                  )
-    fig.update_layout(transition_duration=1000, transition_easing="cubic-in-out")
+    fig.update_layout(transition_duration=1000,
+                      transition_easing="cubic-in-out",
+                      font_family="Courier New",
+                      font_size=14)
 
     return fig
 
