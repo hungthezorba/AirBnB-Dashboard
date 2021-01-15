@@ -38,3 +38,20 @@ span {
 .dropdown-custom {
   margin-top: 2em;
 }
+
+
+#project-title {
+  color: #E75D6E;
+}
+
+#course-title {
+  color: #516690;
+}
+
+.section-title {
+  color: #516690;
+}
+
+.plot-description {
+  margin: 20px;
+}
