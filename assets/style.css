@@ -1,7 +1,6 @@
 
 body {
-  width: 80%;
-  margin: 0 auto;
+
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -29,12 +28,21 @@ span {
   font-family: "Courier New";
 }
 
-section {
+article {
   margin-top: 50px;
 }
 
-.header {
+section {
+  margin-top: 100px;
+}
+
+#header {
   text-align: center;
+}
+
+#main {
+  width: 80%;
+  margin: 0 auto;
 }
 
 

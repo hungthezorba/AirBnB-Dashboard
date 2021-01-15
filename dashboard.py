@@ -141,22 +141,19 @@ def update_map(year_value):
     # data = "Number of AirBnB in New York City in " + str(year_value) + ": " + str(len(df_selected))
     return map_figure, data
 
-# boxplot callback
+# 1. First plot: box plot callback
 @app.callback(
     dash.dependencies.Output('hist-graph-1', 'figure'),
-    [dash.dependencies.Input('x-box-dropdown', 'value'),
-    dash.dependencies.Input('y-box-dropdown', 'value')])
-def update_output(x_value, y_value):
+    [dash.dependencies.Input('x-box-dropdown', 'value')])
+def update_output(x_value):
     # boxplot figure
-    fig = px.box(df, x=x_value, y=y_value,
+    fig = px.box(df, x=x_value,
                  color="Borough" ,height=622,
                  title="Distributions in New York's Borough",
                  labels={
-                     x_value: " ".join(x_value.split("_")),
-                     y_value: " ".join(y_value.split("_"))
+                     x_value: " ".join(x_value.split("_")).capitalize(),
                  }
-
-                 )
+                )
     fig.update_layout(transition_duration=1000,
                       transition_easing="cubic-in-out",
                       font_family="Courier New",
@@ -164,9 +161,35 @@ def update_output(x_value, y_value):
 
     return fig
 
-app.layout = html.Div(children=[
-    html.Section(className="header", children=[
-    html.Div(className="heading", children=[
+# 2. Second plot: scatter plot callback
+@app.callback(
+    dash.dependencies.Output('scatter-graph-1', 'figure'),
+    [dash.dependencies.Input('x-scatter-dropdown', 'value'),
+     dash.dependencies.Input('y-scatter-dropdown', 'value')])
+def update_scatter(x_value, y_value):
+    # scatter figure
+    df['Superhost'] = df['host_is_superhost'].replace({1:'T',0:'F'})
+    fig = px.scatter(
+        df, x=x_value, y=y_value,
+        color=df['Superhost'],
+        hover_data=['price'],
+        title="Scatter plot visualization AirBnB in New York city",
+        labels={
+            x_value: " ".join(x_value.split("_")).capitalize(),
+            y_value: " ".join(y_value.split("_")).capitalize(),
+        }
+    )
+
+    fig.update_layout(transition_duration=1000,
+                      transition_easing="cubic-in-out",
+                      font_family="Courier New",
+                      font_size=14)
+
+    return fig
+
+app.layout = html.Div(id="homepage", children=[
+    html.Section(id="header", children=[
+    html.Div(className="header-box", children=[
         html.Div(children=[
             html.H1(id="project-title", children="AirBnB Case Study")
 
@@ -179,9 +202,9 @@ app.layout = html.Div(children=[
 
         ])
     ]),
-    html.Section(className="main", children=[
+    html.Section(id="main", children=[
 
-        html.Section(id="airbnb-map", children=[
+        html.Article(id="airbnb-map", children=[
 
             html.Div(className="heading-name", children=[
 
@@ -209,7 +232,7 @@ app.layout = html.Div(children=[
 
             ]),
 
-        html.Section(id="price-distribution", children=[
+        html.Article(id="price-distribution", children=[
 
                 dbc.Row([
 
@@ -228,6 +251,7 @@ app.layout = html.Div(children=[
                                         html.P(children="X-axis"),
                                         dcc.Dropdown(id='x-box-dropdown',
                                             options=[
+
                                                 {'label': 'Price', 'value': 'price'},
                                                 {'label': 'Number of reviews', 'value': 'number_of_reviews'},
                                                 {'label': 'Accomodates', 'value': 'accommodates'},
@@ -235,17 +259,6 @@ app.layout = html.Div(children=[
                                             ],
                                                 value='price'),
                                     ]),
-                                    html.Div(className="box dropdown-custom", children=[
-                                        html.P(children="Y-axis"),
-                                        dcc.Dropdown(id='y-box-dropdown',
-                                                     options=[
-                                                         {'label': 'Room type', 'value': 'room_type'},
-                                                         {'label': 'Property', 'value': 'property_type'},
-                                                         {'label': 'Super host', 'value': 'host_is_superhost'}
-                                                     ],
-                                            value='room_type')
-                                    ])
-
                                 ])
 
                         ]),
@@ -259,6 +272,65 @@ app.layout = html.Div(children=[
                             ])
                     ]),
             ]),
+
+        html.Article(id="scatter-exploration", children=[
+            dbc.Row([
+                dbc.Col(width=4, lg=4, xs=12, children=[
+                    html.Div(className="plot-name", children=[
+
+                        html.H4(className="section-title", children="III. Scatterplot exploration in AirBnB")
+                    ]),
+                    html.Div(className="plot-description", children=[
+
+                        html.P(
+                            children="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam pellentesque nulla sed leo blandit egestas. Quisque tempus, turpis non finibus pellentesque, tellus arcu consequat elit, tincidunt pellentesque libero eros porta dui. Fusce vitae dui quis justo lobortis tristique sit amet ac orci. Praesent tincidunt enim at facilisis rutrum.")
+                    ]),
+                    html.Div(className="plot-selectors", children=[
+                        html.Div(className="box dropdown-custom", children=[
+                            html.P(children="X-axis"),
+                            dcc.Dropdown(id='x-scatter-dropdown',
+                                         options=[
+
+                                             {'label': 'Price', 'value': 'price'},
+                                             {'label': 'Number of reviews', 'value': 'number_of_reviews'},
+                                             {'label': 'Accomodates', 'value': 'accommodates'},
+                                             {'label': 'Minimum nights', 'value': 'minimum_nights'},
+                                             {'label': 'Maximum nights', 'value': 'maximum_nights'}
+
+                                         ],
+                                         value='price'),
+                        ]),
+
+                        html.Div(className="box dropdown-custom", children=[
+                            html.P(children="Y-axis"),
+                            dcc.Dropdown(id='y-scatter-dropdown',
+                                         options=[
+
+                                             {'label': 'Price', 'value': 'price'},
+                                             {'label': 'Number of reviews', 'value': 'number_of_reviews'},
+                                             {'label': 'Accomodates', 'value': 'accommodates'},
+                                             {'label': 'Minimum nights', 'value': 'minimum_nights'},
+                                             {'label': 'Maximum nights', 'value': 'maximum_nights'}
+                                         ],
+                                         value='price'),
+                        ])
+                    ])
+                ]),
+
+                dbc.Col(width=8, lg=8, xs=12, children=[
+                    html.Div(className="scatter-plot", children=[
+                        dcc.Graph(
+                            id="scatter-graph-1",
+                        )
+                    ])
+                ])
+            ])
+        ])
+    ]),
+    html.Section(id="footer", children=[
+        html.Div(className="footer-box", children=[
+
+        ])
     ])
 ])
 
