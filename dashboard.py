@@ -126,8 +126,9 @@ app.layout = html.Div(children=[
                                     html.P(children="Data distribution is visualized with boxplot.")
                                 ]),
                             html.Div(className="plot-selectors", children=[
-                                    html.Div(className="box", children=[
-                                        dcc.Dropdown(className="dropdown-custom", id='x-box-dropdown',
+                                    html.Div(className="box dropdown-custom", children=[
+                                        html.P(children="X-axis"),
+                                        dcc.Dropdown(id='x-box-dropdown',
                                             options=[
                                                 {'label': 'Price', 'value': 'price'},
                                                 {'label': 'Number of reviews', 'value': 'number_of_reviews'},
@@ -135,14 +136,17 @@ app.layout = html.Div(children=[
 
                                             ],
                                                 value='price'),
-                                        dcc.Dropdown(className="dropdown-custom", id='y-box-dropdown',
-                                            options=[
-                                                {'label': 'Borough', 'value': 'Borough'},
-                                                {'label': 'Room type', 'value': 'room_type'},
-                                                {'label': 'Property', 'value': 'property_type'},
-                                                {'label': 'Super host', 'value': 'host_is_superhost'}
-                                            ],
-                                                value='Borough'),
+                                    ]),
+                                    html.Div(className="box dropdown-custom", children=[
+                                        html.P(children="Legend"),
+                                        dcc.Dropdown(id='y-box-dropdown',
+                                                     options=[
+                                                         {'label': 'Borough', 'value': 'Borough'},
+                                                         {'label': 'Room type', 'value': 'room_type'},
+                                                         {'label': 'Property', 'value': 'property_type'},
+                                                         {'label': 'Super host', 'value': 'host_is_superhost'}
+                                                     ],
+                                            value='Borough')
                                     ])
 
                                 ])
