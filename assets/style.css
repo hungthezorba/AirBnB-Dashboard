@@ -1,6 +1,6 @@
 
 body {
-  width: 90%;
+  width: 80%;
   margin: 0 auto;
 }
 
@@ -29,6 +29,9 @@ span {
   font-family: "Courier New";
 }
 
+section {
+  margin-top: 50px;
+}
 
 .header {
   text-align: center;
@@ -54,4 +57,10 @@ span {
 
 .plot-description {
   margin: 20px;
+}
+
+.airbnb-span {
+  color: #E75D6E;
+  font-weight: 700;
+  font-style: oblique;
 }

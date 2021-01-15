@@ -96,23 +96,19 @@ df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
 
 group_labels=["Manhattan", "Brooklyn", "Queens", "Staten Island", "Bronx"]
 
-#NY map figure
+# NY map figure
+
+# get year list
+years = df["year_since"].unique()
+years = list(sorted(years.astype(str)))
+years_dict = {i:i for i in years}
 
 px.set_mapbox_access_token("pk.eyJ1IjoiaHVuZ3RoZXpvcmJhIiwiYSI6ImNrYnE4d3o4OTE3MjEydnB0cG44b3JiZzEifQ.M5kWTwGGuqA7WGBAdsIurQ")
-years = []
 @app.callback(
-    dash.dependencies.Output('map-graph', 'figure'),
+    [dash.dependencies.Output('map-graph', 'figure'),
+     dash.dependencies.Output('airbnb-num','children')],
     [dash.dependencies.Input('year-slider', 'value')])
 def update_map(year_value):
-    year = 2019
-    data_slider = []
-
-    # get year list
-    years = df["year_since"].unique()
-    years = list(sorted(years.astype(str)))
-
-    # get airBnB list
-
 
     df_selected = df[df['year_since'] <= year_value]
 
@@ -134,8 +130,16 @@ def update_map(year_value):
                                     'xanchor': 'center',
                                     'yanchor': 'top'
                                     },
+                             transition_duration=1
                              )
-    return map_figure
+    data = [html.Div(children=[
+        html.P(children=[
+            "Number of ",
+            html.Span(className="airbnb-span", children="AirBnB "),
+            "in New York City in: ", str(year_value), ": ", str(len(df_selected))]
+        )])]
+    # data = "Number of AirBnB in New York City in " + str(year_value) + ": " + str(len(df_selected))
+    return map_figure, data
 
 # boxplot callback
 @app.callback(
@@ -177,11 +181,11 @@ app.layout = html.Div(children=[
     ]),
     html.Section(className="main", children=[
 
-        html.Div(id="airbnb-map", children=[
+        html.Section(id="airbnb-map", children=[
 
             html.Div(className="heading-name", children=[
 
-                    html.H4(className="section-title",children="I. Map of AirBnB in New York City")
+                    html.H4(className="section-title",children="I. Map of AirBnB in New York City"),
 
                 ]),
 
@@ -191,12 +195,13 @@ app.layout = html.Div(children=[
                             id="map-graph",
 
                             ),
+                        html.P(id="airbnb-num"),
                         dcc.Slider(
                             id='year-slider',
-                            min=2010,
-                            max=2019,
-                            value=years[0],
-                            marks={years: years},
+                            min=int(years[0]),
+                            max=int(years[-1]),
+                            value=int(years[-1]),
+                            marks=years_dict,
                             included=False
                         )
 
@@ -204,7 +209,7 @@ app.layout = html.Div(children=[
 
             ]),
 
-        html.Div(id="price-distribution", children=[
+        html.Section(id="price-distribution", children=[
 
                 dbc.Row([
 
