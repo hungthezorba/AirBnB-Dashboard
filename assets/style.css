@@ -33,7 +33,7 @@ article {
 }
 
 section {
-  margin-top: 100px;
+  margin-top: 60px;
 }
 
 #header {
@@ -41,8 +41,8 @@ section {
 }
 
 #main {
-  width: 80%;
-  margin: 0 auto;
+  width: 100%;
+  padding: 0 7%;
 }
 
 

@@ -115,9 +115,9 @@ def update_map(year_value):
     map_figure = px.scatter_mapbox(df_selected, lat=df_selected['latitude'], lon=df_selected['longitude'],
                                      color="Borough",
                                      labels="Borough",
-                                    zoom=10, mapbox_style="mapbox://styles/hungthezorba/ckjwq978c106e17mynq5zyx9q",
+                                    zoom=9, mapbox_style="mapbox://styles/hungthezorba/ckjwq978c106e17mynq5zyx9q",
                                     center=dict(lat=40.730610, lon=-73.935242),
-                                    height=820,
+                                    height=720,
                                     size="price",
                                    hover_data=["price"],
                                     color_continuous_midpoint=1,
@@ -165,13 +165,16 @@ def update_output(x_value):
 @app.callback(
     dash.dependencies.Output('scatter-graph-1', 'figure'),
     [dash.dependencies.Input('x-scatter-dropdown', 'value'),
-     dash.dependencies.Input('y-scatter-dropdown', 'value')])
-def update_scatter(x_value, y_value):
+     dash.dependencies.Input('y-scatter-dropdown', 'value'),
+     dash.dependencies.Input('color-scatter-dropdown', 'value')])
+def update_scatter(x_value, y_value, color_value):
     # scatter figure
-    df['Superhost'] = df['host_is_superhost'].replace({1:'T',0:'F'})
+    if (color_value == "host_is_superhost"):
+    	 df['host_is_superhost'] = df['host_is_superhost'].replace({1:'T',0:'F'})
+
     fig = px.scatter(
         df, x=x_value, y=y_value,
-        color=df['Superhost'],
+        color=color_value,
         hover_data=['price'],
         title="Scatter plot visualization AirBnB in New York city",
         labels={
@@ -213,12 +216,7 @@ app.layout = html.Div(id="homepage", children=[
                 ]),
 
                 html.Div(className="map-container", children=[
-
-                        dcc.Graph(
-                            id="map-graph",
-
-                            ),
-                        html.P(id="airbnb-num"),
+						html.P(id="airbnb-num"),
                         dcc.Slider(
                             id='year-slider',
                             min=int(years[0]),
@@ -226,8 +224,11 @@ app.layout = html.Div(id="homepage", children=[
                             value=int(years[-1]),
                             marks=years_dict,
                             included=False
-                        )
+                        ),
+                        dcc.Graph(
+                            id="map-graph",
 
+                            )
                     ])
 
             ]),
@@ -313,6 +314,17 @@ app.layout = html.Div(id="homepage", children=[
                                              {'label': 'Maximum nights', 'value': 'maximum_nights'}
                                          ],
                                          value='price'),
+                        ]),
+                        html.Div(className="box dropdown-custom", children=[
+                            html.P(children="color-axis"),
+                            dcc.Dropdown(id='color-scatter-dropdown',
+                                         options=[
+                                         	{'label': 'Superhost', 'value': 'host_is_superhost'},
+                                         	{'label': 'Borough', 'value': 'Borough'},
+                                         	{'label': 'Property type', 'value':'property_type'},
+                                         	{'label': 'Room type', 'value': 'room_type'}
+                                         ],
+                                         value='Borough'),
                         ])
                     ])
                 ]),
