@@ -207,6 +207,7 @@ app.layout = html.Div(id="homepage", children=[
     ]),
     html.Section(id="main", children=[
 
+    	# AirBnB in New York city's map
         html.Article(id="airbnb-map", children=[
 
             html.Div(className="heading-name", children=[
@@ -233,9 +234,10 @@ app.layout = html.Div(id="homepage", children=[
 
             ]),
 
+        # First plot visualization
         html.Article(id="price-distribution", children=[
 
-                dbc.Row([
+                dbc.Row(className="plot-container", children=[
 
                     dbc.Col(width=4,lg=4, xs=12, className="left-container", children=[
 
@@ -274,12 +276,13 @@ app.layout = html.Div(id="homepage", children=[
                     ]),
             ]),
 
+        # Second plot visualization
         html.Article(id="scatter-exploration", children=[
-            dbc.Row([
+            dbc.Row(className="plot-container", children=[
                 dbc.Col(width=4, lg=4, xs=12, children=[
                     html.Div(className="plot-name", children=[
 
-                        html.H4(className="section-title", children="III. Scatterplot exploration in AirBnB")
+                        html.H4(className="section-title", children="III. Scatter plot exploration in AirBnB")
                     ]),
                     html.Div(className="plot-description", children=[
 
@@ -324,7 +327,7 @@ app.layout = html.Div(id="homepage", children=[
                                          	{'label': 'Property type', 'value':'property_type'},
                                          	{'label': 'Room type', 'value': 'room_type'}
                                          ],
-                                         value='Borough'),
+                                         value='host_is_superhost'),
                         ])
                     ])
                 ]),
