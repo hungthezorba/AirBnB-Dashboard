@@ -1,1 +1,2 @@
-dash-bootstrap-components-0.11.1
+dash-bootstrap-components==0.11.1
+dash==1.18.1
