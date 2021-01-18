@@ -21,6 +21,14 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
 
+layout_settings = {
+                  'transition_duration': 1000,
+                  'transition_easing': "cubic-in-out",
+                  'font_family':"Courier New",
+                  'font_size':14,
+                  'height': 720
+                }
+
 AirBnB_data = "./data/cleaned-AirBnB.csv"
 
 df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
@@ -117,10 +125,7 @@ def update_output(x_value):
                      x_value: " ".join(x_value.split("_")).capitalize(),
                  }
                 )
-    fig.update_layout(transition_duration=1000,
-                      transition_easing="cubic-in-out",
-                      font_family="Courier New",
-                      font_size=14)
+    fig.update_layout(layout_settings)
 
     return fig
 
@@ -146,10 +151,7 @@ def update_scatter(x_value, y_value, color_value):
         }
     )
 
-    fig.update_layout(transition_duration=1000,
-                      transition_easing="cubic-in-out",
-                      font_family="Courier New",
-                      font_size=14)
+    fig.update_layout(layout_settings)
 
     return fig
 
@@ -264,7 +266,6 @@ app.layout = html.Div(id="homepage", children=[
                                                      {'label': 'Number of reviews', 'value': 'number_of_reviews'},
                                                      {'label': 'Accomodates', 'value': 'accommodates'},
                                                      {'label': 'Minimum nights', 'value': 'minimum_nights'},
-                                                     {'label': 'Maximum nights', 'value': 'maximum_nights'},
                                                      {'label': 'Number of amenities', 'value': 'number_of_amenities'},
                                                      {'label': 'Number of bathrooms', 'value': 'bathrooms_Count'},
 
@@ -282,7 +283,6 @@ app.layout = html.Div(id="homepage", children=[
                                                      {'label': 'Number of reviews', 'value': 'number_of_reviews'},
                                                      {'label': 'Accomodates', 'value': 'accommodates'},
                                                      {'label': 'Minimum nights', 'value': 'minimum_nights'},
-                                                     {'label': 'Maximum nights', 'value': 'maximum_nights'},
                                                      {'label': 'Number of amenities', 'value': 'number_of_amenities'},
                                                      {'label': 'Number of bathrooms', 'value': 'bathrooms_Count'},
                                                  ],
@@ -295,7 +295,6 @@ app.layout = html.Div(id="homepage", children=[
                                          options=[
                                             {'label': 'Superhost', 'value': 'host_is_superhost'},
                                             {'label': 'Borough', 'value': 'Borough'},
-                                            {'label': 'Property type', 'value':'property_type'},
                                             {'label': 'Room type', 'value': 'room_type'}
                                          ],
                                          value='host_is_superhost'),
@@ -310,6 +309,21 @@ app.layout = html.Div(id="homepage", children=[
                         )
                     ])
                 ])
+            ])
+        ]),
+        html.Article(id="classification-model", children=[
+            dbc.Row(className="plot-container", children=[
+                dbc.Col(width=4, lg=4, xs=12, children=[
+                    html.Div(className="plot-name", children=[
+
+                        html.H4(className="section-title", children="IV. Property classification in AirBnB")
+                    ]),
+                    html.Div(className="plot-description", children=[
+
+                        html.P(
+                            children="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam pellentesque nulla sed leo blandit egestas. Quisque tempus, turpis non finibus pellentesque, tellus arcu consequat elit, tincidunt pellentesque libero eros porta dui. Fusce vitae dui quis justo lobortis tristique sit amet ac orci. Praesent tincidunt enim at facilisis rutrum.")
+                    ]),
+                ]),
             ])
         ])
     ]),
