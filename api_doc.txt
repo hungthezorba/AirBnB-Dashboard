@@ -1,0 +1,9 @@
+#### This is a document for API cluster functions ####
+This api used for API listings data, make sure to drop unused columns before pasting the necessary data to cluster. 
+*Columns to drop*: "description,neighborhood_overview,host_about,listing_url,name,scrape_id,last_scraped,picture_url,host_url,host_name,host_thumbnail_url,host_picture_url,calendar_updated,calendar_last_scraped,license,bathrooms,minimum_nights,maximum_nights,minimum_minimum_nights,maximum_minimum_nights,minimum_maximum_nights,maximum_maximum_nights,minimum_nights_avg_ntm,maximum_nights_avg_ntm"
+
+### ROUTES ####
+1. Cluster properties:
+-> /cluster/props (POST) - cluster based on ['price', 'encoded_prop_type', 'encodePrivacy', 'room_type_rank'] features
+2. Cluster amenities:
+-> /cluster/am (POST) - cluster based on ['number_amenities', 'bathrooms_Count', 'bathrooms_share', 'beds'] features
