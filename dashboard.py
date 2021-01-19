@@ -8,10 +8,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
 import pandas as pd
-import plotly.figure_factory as ff
-import numpy as np
-import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -31,7 +29,9 @@ layout_settings = {
 
 AirBnB_data = "./data/cleaned-AirBnB.csv"
 
-df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
+AirBnB_property_cluster = "./data/AirBnB-property-cluster.csv"
+
+df = pd.read_csv(AirBnB_property_cluster, sep=',', decimal='.', header=None,
   names =['id', 'description', 'neighborhood_overview', 'host_id', 'host_since',
        'host_location', 'host_about', 'host_response_time',
        'host_response_rate', 'host_acceptance_rate', 'host_is_superhost',
@@ -56,11 +56,13 @@ df = pd.read_csv(AirBnB_data, sep=',', decimal='.', header=None,
        'calculated_host_listings_count_private_rooms',
        'calculated_host_listings_count_shared_rooms', 'reviews_per_month',
        'encodePrivacy', 'StringPropType', 'encoded prop_type',
-       'room_type_rank', 'bathrooms_Count', 'bathrooms_share',
-       'amenities_clean', 'availability_30_nml', 'availability_60_nml',
-       'availability_90_nml', 'availability_365_nml',
+       'room_type_rank', 'bathrooms_Count', 'bathrooms_share', 'num_of_verf',
+       'amenities_clean', 'number_amenities', 'availability_30_nml',
+       'availability_60_nml', 'availability_90_nml', 'availability_365_nml',
        'review_scores_rating_nml', 'host_since_days', 'host_year_exp',
-       'host_year', 'number_of_amenities', 'string_amenities'])
+       'string_amenities', 'host_year', 'number_of_amenities',
+       'Cluster_prop_id'])
+
 
 
 # Create price array of each neighbourhood_group_cleansed
@@ -138,7 +140,7 @@ def update_output(x_value):
 def update_scatter(x_value, y_value, color_value):
     # scatter figure
     if (color_value == "host_is_superhost"):
-    	 df['host_is_superhost'] = df['host_is_superhost'].replace({1:'T',0:'F'})
+        df['host_is_superhost'] = df['host_is_superhost'].replace({1:'T',0:'F'})
 
     fig = px.scatter(
         df, x=x_value, y=y_value,
@@ -154,6 +156,52 @@ def update_scatter(x_value, y_value, color_value):
     fig.update_layout(layout_settings)
 
     return fig
+
+# 3. Third plot: classification plot callback
+@app.callback(
+    dash.dependencies.Output('classification-graph-1', 'figure'),
+    [dash.dependencies.Input('x-classification-dropdown','value')]
+)
+def update_classification(x_value):
+    #classification figure
+
+    fig = px.box(df, x=x_value, color='Cluster_prop_id')
+    fig.update_layout(layout_settings)
+
+    return fig
+
+# 3.2 Fourth plot
+@app.callback(
+    dash.dependencies.Output('classification-graph-2', 'figure'),
+    [dash.dependencies.Input('classification-group-dropdown', 'value')]
+)
+def update_classification_2(group_value):
+
+    group_df = df.loc[df["Cluster_prop_id"] == group_value]
+
+    property_type_count = group_df["StringPropType"].value_counts()
+
+    group_df["plot_type"] = group_df["StringPropType"].apply(
+        lambda x: "other" if property_type_count.get(x) < property_type_count[4] else x)
+
+    count = group_df["plot_type"].value_counts()
+    index = count.index
+
+    DictGroup = {}
+    for i in index.tolist():
+        DictGroup[i] = count.get(i)
+
+    newDf = pd.DataFrame(DictGroup.items(), columns=['properties', 'count'])
+
+    print (newDf)
+
+    fig = px.bar(newDf, x='properties', y='count')
+
+    fig.update_layout(layout_settings)
+
+    return fig
+
+
 
 app.layout = html.Div(id="homepage", children=[
     html.Section(id="header", children=[
@@ -323,7 +371,53 @@ app.layout = html.Div(id="homepage", children=[
                         html.P(
                             children="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam pellentesque nulla sed leo blandit egestas. Quisque tempus, turpis non finibus pellentesque, tellus arcu consequat elit, tincidunt pellentesque libero eros porta dui. Fusce vitae dui quis justo lobortis tristique sit amet ac orci. Praesent tincidunt enim at facilisis rutrum.")
                     ]),
+                    html.Div(className="plot-selectors", children=[
+                        html.Div(className="box dropdown-custom", children=[
+                            html.P(children="X-axis"),
+                            dcc.Dropdown(id='x-classification-dropdown',
+                                         options=[
+
+                                             {'label': 'Price', 'value': 'price'},
+                                             {'label': 'Number of reviews', 'value': 'number_of_reviews'},
+                                             {'label': 'Accomodates', 'value': 'accommodates'},
+
+                                         ],
+                                         value='price'),
+                        ]),
+                    ])
                 ]),
+                dbc.Col(width=8, lg=8, xs=12, children=[
+                    html.Div(className="classification-plot", children=[
+                        dcc.Graph(
+                            id="classification-graph-1",
+                        )
+                    ])
+                ])
+            ]),
+            dbc.Row(className='plot-container', children=[
+                dbc.Col(width=12, lg=12, xs=12, children=[
+                    html.Div(className="plot-selectors", children=[
+                        html.Div(className="box dropdown-custom", children=[
+                            html.P(children="X-axis"),
+                            dcc.Dropdown(id='classification-group-dropdown',
+                                         options=[
+
+                                             {'label': '0', 'value': 0},
+                                             {'label': '1', 'value': 1},
+                                             {'label': '2', 'value': 2},
+
+                                         ],
+                                         value=0),
+                        ]),
+                    ])
+                ]),
+                dbc.Col(width=12, lg=12, xs=12, children=[
+                    html.Div(className="classification-plot", children=[
+                        dcc.Graph(
+                            id="classification-graph-2",
+                        )
+                    ])
+                ])
             ])
         ])
     ]),
