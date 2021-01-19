@@ -11,6 +11,11 @@ MODEL_PATH_1 = "model/kmeans_props.pkl"
 with open(MODEL_PATH_1, "rb") as rf:
     kmeans_props = pickle.load(rf)
 
+MODEL_PATH_2 = "model/kmeans_am.pkl"
+with open(MODEL_PATH_2, "rb") as rf:
+    kmeans_am = pickle.load(rf)
+
+
 # Init the app
 app = Flask(__name__)
 
@@ -45,13 +50,112 @@ def prepare_and_std_props(df):
     df_scaled.head()
     return df_scaled
 
-# predict function
-def predict_function_props(sample, clst):
+## Function to cluster amenities features
+def cluster_function_am(sample, clst):
+    # Retrieve dataframe from json
+    df = pd.DataFrame.from_dict(sample, orient='index')
+    
+    #### Feature transformation for amenities cluster ####
+
+    totalAmenities = []
+    for index,row in df.iterrows():
+        charList = list(row["amenities"]) #c
+        for i in charList:
+            if i ==",":
+                pass
+            elif i == " ":
+                pass
+            elif not i.isalpha():
+                charList.remove(i)
+        cleanedString = "".join(charList).lower() #d 
+
+        #get this row amenities
+        thisRowAmenities = cleanedString.split(", ")
+        totalAmenities.append(thisRowAmenities)
+        
+        totalAmenitiesClean = []
+    for i in totalAmenities:
+        thisListClean = []
+        for element in i:
+            try:
+                element = element.replace("]","")
+            except:
+                pass 
+            try:
+                element =  element.replace("\"","")
+            except:
+                pass
+            thisListClean.append(element)
+        totalAmenitiesClean.append(thisListClean)
+    df["amenities_clean"] = pd.Series(totalAmenitiesClean, index=df.index)
+    df["number_amenities"] = df["amenities_clean"].apply(lambda x:len(x))
+    
+    # Room-type-rank Handler
+    room_type_unique = df["room_type"].unique().tolist()
+    room_type_rank = {
+        'Shared room':1,
+        'Private room':2,
+        'Hotel room':3,
+        'Entire home/apt':4,
+    }
+    encode_room_type = []
+    for index,row in df.iterrows():
+        InAgroup = False
+        for key in list(room_type_rank):
+            if key == row["room_type"]:
+                InAgroup = True
+                break
+        if not InAgroup:
+            encode_room_type.append(0)
+        else:
+            encode_room_type.append(room_type_rank[key])
+    df["room_type_rank"] = pd.Series(encode_room_type, index=df.index)
+    
+    # Bathroom features
+        # this cell encode the bathrooms_text to number of bathrooms, if the row is nan 
+    # we will check the roomtypes encode because if the room_types encode is less than 2, there are high chance 
+    # that the traveler will need to share a bathroom with the host
+    bathrooms_Count = []
+    bathrooms_share = []
+    for index,row in df.iterrows():
+        try:
+            count = round(float(row["bathrooms_text"].split()[0]))
+            if "shared" in row["bathrooms_text"].lower():
+                bathrooms_share.append(1)
+            else:
+                bathrooms_share.append(0)
+        except:
+    #         print(index)
+            count = 1
+            if row["room_type_rank"] < 3:
+                bathrooms_share.append(1)
+            else:
+                bathrooms_share.append(0)
+        bathrooms_Count.append(count)
+    
+    df["bathrooms_Count"] = pd.Series(bathrooms_Count, index=df.index)
+    df["bathrooms_share"] = pd.Series(bathrooms_share, index=df.index)
+    
+    # Fill NaN for beds column if (has)
+    df["beds"].fillna(1, inplace=True)
+    df["bedrooms"].fillna(1, inplace=True)
+    
+    # Aggregate fit-in features
+    df_predict = df[['number_amenities', 'bathrooms_Count', 'bathrooms_share', 'beds']]
+    df_predict_scaled = prepare_and_std_props(df_predict)
+    
+    print(df.isna().sum())
+    # predict
+    y_cluster = clst.predict(df_predict_scaled)
+    return y_cluster
+    
+    
+
+## Cluster function for properties
+def cluster_function_props(sample, clst):
     
     df = pd.DataFrame.from_dict(sample, orient='index')
     
-    # IMPORTANT: USE THE SUITABLE ORIENT
-
     ##### if you have any step of data transformation, include it here ####
     df["property_type"] = df["property_type"].str.replace("tipi","tent")
     df["property_type"] = df["property_type"].str.replace("bed and breakfast","casa particular")
@@ -171,17 +275,16 @@ def predict_function_props(sample, clst):
             print(i, "has missing values", df_predict[i].isna().sum())
 
     # predict
-    
     y_cluster = clst.predict(df_predict_scaled)
     return y_cluster
 
 
-# Predict function api
-@app.route("/predict/props", methods=["POST"])
-def predict():
+# Cluster function api
+@app.route("/cluster/props", methods=["POST"])
+def cluster_props():
     sample = request.get_json()
 #     print(len(sample))
-    predictions = predict_function_props(sample, kmeans_props)
+    predictions = cluster_function_props(sample, kmeans_props)
     pred = predictions.tolist()
     result = {
         'prediction': pred
@@ -189,55 +292,16 @@ def predict():
 
     return jsonify(result)
 
-
-# evaluate function
-def evaluate_function(sample, clf):
-    
-    # IMPORTANT: USE THE SUITABLE ORIENT
-    test = pd.DataFrame.from_dict(sample, orient='index')
-
-    # if you have any step of data transformation, include it here
-    converter = {'True' : 1, 'False' : 0}
-    nominal_columns = list(test.columns[1:-1])
-    print(nominal_columns)
-    for col in nominal_columns:
-        test[col] = test[col].astype(int)        
- 
-    # separate features / label column here:
-    X_test = test.iloc[:, 1:-1]
-    y_test = test['type']
-    
-    # label encoder
-    from sklearn import preprocessing
-    enc = preprocessing.LabelEncoder()
-    encoder_dict = np.load('model/label_encoder.npy', allow_pickle=True).tolist()
-    for nom in encoder_dict:
-        for col in X_test.columns:
-            if nom == col:
-                enc.classes_ = encoder_dict[nom]
-                X_test[[col]] = enc.transform(X_test[[col]])
-                
-    # predict
-    y_pred = clf.predict(X_test)
-    
-    # evaluate
-    from sklearn.metrics import accuracy_score, precision_score
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred, average='macro')
-    return accuracy, precision
-
-
-# evaluate function api
-@app.route("/evaluate", methods=["POST"])
-def evaluate():
+# Cluster function api
+@app.route("/cluster/am", methods=["POST"])
+def cluster_am():
     sample = request.get_json()
-    accuracy = evaluate_function(sample, clf)
-
+#     print(len(sample))
+    predictions = cluster_function_am(sample, kmeans_am)
+    pred = predictions.tolist()
     result = {
-        'accuracy': accuracy,
-        'precision': precision
+        'prediction': pred
     }
-    
     return jsonify(result)
 
 # main
