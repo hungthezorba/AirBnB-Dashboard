@@ -4,8 +4,13 @@ import pandas as pd
 
 from flask import Flask, jsonify, request
 import numpy as np
+import ast
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
+
+from datetime import timedelta
+from datetime import datetime
 
 MODEL_PATH_1 = "model/kmeans_props.pkl"
 with open(MODEL_PATH_1, "rb") as rf:
@@ -14,6 +19,10 @@ with open(MODEL_PATH_1, "rb") as rf:
 MODEL_PATH_2 = "model/kmeans_am.pkl"
 with open(MODEL_PATH_2, "rb") as rf:
     kmeans_am = pickle.load(rf)
+
+MODEL_PATH_3 = "model/kmeans_host.pkl"
+with open(MODEL_PATH_3, "rb") as rf:
+    kmeans_host = pickle.load(rf)
 
 
 # Init the app
@@ -156,6 +165,8 @@ def cluster_function_props(sample, clst):
     
     df = pd.DataFrame.from_dict(sample, orient='index')
     
+
+    
     ##### if you have any step of data transformation, include it here ####
     df["property_type"] = df["property_type"].str.replace("tipi","tent")
     df["property_type"] = df["property_type"].str.replace("bed and breakfast","casa particular")
@@ -278,8 +289,101 @@ def cluster_function_props(sample, clst):
     y_cluster = clst.predict(df_predict_scaled)
     return y_cluster
 
+def cluster_function_host(sample, clst):
+    # Retrieve dataframe from request body
+    df = pd.DataFrame.from_dict(sample, orient='index')
+    
+    #### Impute missing data ####
+    df['host_since'].fillna(df['host_since'].mode()[0], inplace=True)
+    
+    #### Feature transformation for host cluster ####
+    # Number of verfication methods per host
+    df["num_of_verf"] = df['host_verifications'].apply(lambda x: len(ast.literal_eval(x)) if x != 'None' else 0)
+    
+    # Host since (days) feature
+    date_host_ds = df['host_since']
+    date_host_ds = pd.to_datetime(date_host_ds, infer_datetime_format=True)
+    # Retrieve today's date and time
+    today = datetime.today()
+    host_since_days = date_host_ds.apply(lambda x: (today - x).days)
+    host_since_days_df = host_since_days.to_frame().rename(columns={'host_since': 'host_since_days'}) # Convert series to dataframe
+    
+    
+    # Fill NaN value with median
+    df['review_scores_rating'] = df['review_scores_rating'].fillna(df['review_scores_rating'].median())
+    
+    # Initialize scaler
+    scale_score = MinMaxScaler()
+    df['review_scores_rating_nml'] = scale_score.fit_transform(df[['review_scores_rating']])
+    
+    # Groupby average host rating for all their houses in their listings
+    df_host = df.groupby('host_id')['review_scores_rating_nml'].agg(['mean'])
+    (df_host.shape, df.shape)
+    df_host.reset_index(inplace=True)
+    df_host.rename(columns={'mean': 'average_review_score'}, inplace=True)
+    
+    # Groupby average host rating for all their houses in their listings
+    df_host_count = df.groupby('host_id')['host_id'].agg(['count'])
+    (df_host_count.shape, df.shape)
+    df_host_count.reset_index(inplace=True)
+    df_host_count.rename(columns={'count': 'num_of_host_props'}, inplace=True)
+    
+    # Define list of superhost based on host's id
+    df_host_superhost = df[['host_id', 'host_is_superhost']]
+    df_host_superhost.drop_duplicates(subset='host_id', keep='first', inplace=True)
+    df_host_superhost.reset_index(drop=True, inplace=True)
+    
+    # Encode superhost feature
+    df_host_superhost['host_is_superhost'] = df_host_superhost['host_is_superhost'].apply(lambda x: "1" if x == "t" else "0")
+    df_host_superhost['host_is_superhost'] = df_host_superhost['host_is_superhost'].astype('int32')
+    # Host experience by year feature
+    df = pd.concat([df, host_since_days_df], axis=1)
+    df['host_year_exp'] = df['host_since_days'].apply(lambda x: x/365.25)
+    
+    # Host-experience feature
+    df_host_experience= df.groupby("host_id")["host_year_exp"].agg(["mean"])
+    df_host_experience.reset_index(inplace=True)
+    df_host_experience.rename(columns={'mean': 'host_experiece'}, inplace=True)
+    
+    # Recognition features
+    list_of_recog = ['host_has_profile_pic', 'host_identity_verified']
+    # Impute with most frequent value
+    for col in list_of_recog:
+        df[col] = df[col].apply(lambda x: x if pd.notnull(x) else df[col].mode()[0])
+    # Encode recog features
 
-# Cluster function api
+    
+    # Define list of superhost based on host's id
+    df_host_recog = df[['host_id', 'host_has_profile_pic', 'host_identity_verified']]
+    df_host_recog.drop_duplicates(subset='host_id', keep='first', inplace=True)
+    df_host_recog.reset_index(drop=True, inplace=True)
+    for col in list_of_recog:
+        df_host_recog[col] = df_host_recog[col].apply(lambda x: "1" if x == "t" else "0")
+        df_host_recog[col] = df_host_recog[col].astype('int32')
+    
+    # Define dataframe for number of verf
+    df_host_verf_num = df.groupby("host_id")["num_of_verf"].agg(["max"])
+    df_host_verf_num.reset_index(inplace=True)
+    df_host_verf_num.rename(columns={'max': 'num_of_verf'}, inplace=True)
+    
+    # Merge all host features
+    df_host = df_host.merge(df_host_count, on='host_id')
+    df_host = df_host.merge(df_host_superhost, on='host_id')
+    df_host = df_host.merge(df_host_recog, on='host_id')
+    df_host = df_host.merge(df_host_experience, on='host_id')
+    df_host = df_host.merge(df_host_verf_num, on='host_id')
+    
+    df_host.drop(['host_id'], axis=1, inplace=True)
+    # Scale host features
+    df_behave_scaled = prepare_and_std_props(df_host)
+    print(df_host.isna().sum())
+    
+    # Clustering
+    y_cluster = kmeans_host.predict(df_behave_scaled)
+    
+    return y_cluster
+
+# Cluster function api for properties
 @app.route("/cluster/props", methods=["POST"])
 def cluster_props():
     sample = request.get_json()
@@ -292,7 +396,7 @@ def cluster_props():
 
     return jsonify(result)
 
-# Cluster function api
+# Cluster function api for amenities
 @app.route("/cluster/am", methods=["POST"])
 def cluster_am():
     sample = request.get_json()
@@ -303,6 +407,19 @@ def cluster_am():
         'prediction': pred
     }
     return jsonify(result)
+
+# Cluster function api for host
+@app.route("/cluster/host", methods=["POST"])
+def cluster_host():
+    sample = request.get_json()
+#     print(len(sample))
+    predictions = cluster_function_host(sample, kmeans_host)
+    pred = predictions.tolist()
+    result = {
+        'prediction': pred
+    }
+    return jsonify(result)
+
 
 # main
 if __name__ == '__main__':

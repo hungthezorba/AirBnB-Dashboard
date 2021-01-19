@@ -7,3 +7,5 @@ This api used for API listings data, make sure to drop unused columns before pas
 -> /cluster/props (POST) - cluster based on ['price', 'encoded_prop_type', 'encodePrivacy', 'room_type_rank'] features
 2. Cluster amenities:
 -> /cluster/am (POST) - cluster based on ['number_amenities', 'bathrooms_Count', 'bathrooms_share', 'beds'] features
+3. Cluster host:
+-> /cluster/host (POST) - cluster based on average_review_score| num_of_host_props| host_is_superhost| host_has_profile_pic| host_identity_verified| host_experiece| num_of_verf| features
