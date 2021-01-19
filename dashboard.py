@@ -61,7 +61,7 @@ df = pd.read_csv(AirBnB_property_cluster, sep=',', decimal='.', header=None,
        'availability_60_nml', 'availability_90_nml', 'availability_365_nml',
        'review_scores_rating_nml', 'host_since_days', 'host_year_exp',
        'string_amenities', 'host_year', 'number_of_amenities',
-       'Cluster_prop_id'])
+       'Group'])
 
 
 
@@ -157,27 +157,17 @@ def update_scatter(x_value, y_value, color_value):
 
     return fig
 
-# 3. Third plot: cluster plot callback
-@app.callback(
-    dash.dependencies.Output('cluster-graph-1', 'figure'),
-    [dash.dependencies.Input('x-cluster-dropdown','value')]
-)
-def update_cluster(x_value):
-    #cluster figure
-
-    fig = px.box(df, x=x_value, color='Cluster_prop_id')
-    fig.update_layout(layout_settings)
-
-    return fig
-
-# 3.2 Fourth plot
+# 3.1 Third plot
+cluster_fig = px.box(df, x="price", color='Group')
+cluster_fig.update_layout(layout_settings)
+# 3.2 Fourth plot: cluster plot callback
 @app.callback(
     dash.dependencies.Output('cluster-graph-2', 'figure'),
     [dash.dependencies.Input('cluster-group-dropdown', 'value')]
 )
 def update_cluster_2(group_value):
 
-    group_df = df.loc[df["Cluster_prop_id"] == group_value]
+    group_df = df.loc[df["Group"] == group_value]
 
     property_type_count = group_df["StringPropType"].value_counts()
 
@@ -191,11 +181,11 @@ def update_cluster_2(group_value):
     for i in index.tolist():
         DictGroup[i] = count.get(i)
 
-    newDf = pd.DataFrame(DictGroup.items(), columns=['properties', 'count'])
+    newDf = pd.DataFrame(DictGroup.items(), columns=['Property', 'Count'])
 
     print (newDf)
 
-    fig = px.bar(newDf, x='properties', y='count')
+    fig = px.bar(newDf, x='Property', y='Count')
 
     fig.update_layout(layout_settings)
 
@@ -371,25 +361,13 @@ app.layout = html.Div(id="homepage", children=[
                         html.P(
                             children="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam pellentesque nulla sed leo blandit egestas. Quisque tempus, turpis non finibus pellentesque, tellus arcu consequat elit, tincidunt pellentesque libero eros porta dui. Fusce vitae dui quis justo lobortis tristique sit amet ac orci. Praesent tincidunt enim at facilisis rutrum.")
                     ]),
-                    html.Div(className="plot-selectors", children=[
-                        html.Div(className="box dropdown-custom", children=[
-                            html.P(children="X-axis"),
-                            dcc.Dropdown(id='x-cluster-dropdown',
-                                         options=[
-
-                                             {'label': 'Price', 'value': 'price'},
-                                             {'label': 'Number of reviews', 'value': 'number_of_reviews'},
-                                             {'label': 'Accomodates', 'value': 'accommodates'},
-
-                                         ],
-                                         value='price'),
-                        ]),
-                    ])
                 ]),
                 dbc.Col(width=8, lg=8, xs=12, children=[
                     html.Div(className="cluster-plot", children=[
                         dcc.Graph(
                             id="cluster-graph-1",
+                            figure=cluster_fig
+
                         )
                     ])
                 ])
@@ -398,7 +376,7 @@ app.layout = html.Div(id="homepage", children=[
                 dbc.Col(width=12, lg=12, xs=12, children=[
                     html.Div(className="plot-selectors", children=[
                         html.Div(className="box dropdown-custom", children=[
-                            html.P(children="X-axis"),
+                            html.P(children="Group"),
                             dcc.Dropdown(id='cluster-group-dropdown',
                                          options=[
 
