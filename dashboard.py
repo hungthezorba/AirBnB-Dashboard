@@ -157,13 +157,13 @@ def update_scatter(x_value, y_value, color_value):
 
     return fig
 
-# 3. Third plot: classification plot callback
+# 3. Third plot: cluster plot callback
 @app.callback(
-    dash.dependencies.Output('classification-graph-1', 'figure'),
-    [dash.dependencies.Input('x-classification-dropdown','value')]
+    dash.dependencies.Output('cluster-graph-1', 'figure'),
+    [dash.dependencies.Input('x-cluster-dropdown','value')]
 )
-def update_classification(x_value):
-    #classification figure
+def update_cluster(x_value):
+    #cluster figure
 
     fig = px.box(df, x=x_value, color='Cluster_prop_id')
     fig.update_layout(layout_settings)
@@ -172,10 +172,10 @@ def update_classification(x_value):
 
 # 3.2 Fourth plot
 @app.callback(
-    dash.dependencies.Output('classification-graph-2', 'figure'),
-    [dash.dependencies.Input('classification-group-dropdown', 'value')]
+    dash.dependencies.Output('cluster-graph-2', 'figure'),
+    [dash.dependencies.Input('cluster-group-dropdown', 'value')]
 )
-def update_classification_2(group_value):
+def update_cluster_2(group_value):
 
     group_df = df.loc[df["Cluster_prop_id"] == group_value]
 
@@ -359,12 +359,12 @@ app.layout = html.Div(id="homepage", children=[
                 ])
             ])
         ]),
-        html.Article(id="classification-model", children=[
+        html.Article(id="cluster-model", children=[
             dbc.Row(className="plot-container", children=[
                 dbc.Col(width=4, lg=4, xs=12, children=[
                     html.Div(className="plot-name", children=[
 
-                        html.H4(className="section-title", children="IV. Property classification in AirBnB")
+                        html.H4(className="section-title", children="IV. Property cluster in AirBnB")
                     ]),
                     html.Div(className="plot-description", children=[
 
@@ -374,7 +374,7 @@ app.layout = html.Div(id="homepage", children=[
                     html.Div(className="plot-selectors", children=[
                         html.Div(className="box dropdown-custom", children=[
                             html.P(children="X-axis"),
-                            dcc.Dropdown(id='x-classification-dropdown',
+                            dcc.Dropdown(id='x-cluster-dropdown',
                                          options=[
 
                                              {'label': 'Price', 'value': 'price'},
@@ -387,9 +387,9 @@ app.layout = html.Div(id="homepage", children=[
                     ])
                 ]),
                 dbc.Col(width=8, lg=8, xs=12, children=[
-                    html.Div(className="classification-plot", children=[
+                    html.Div(className="cluster-plot", children=[
                         dcc.Graph(
-                            id="classification-graph-1",
+                            id="cluster-graph-1",
                         )
                     ])
                 ])
@@ -399,7 +399,7 @@ app.layout = html.Div(id="homepage", children=[
                     html.Div(className="plot-selectors", children=[
                         html.Div(className="box dropdown-custom", children=[
                             html.P(children="X-axis"),
-                            dcc.Dropdown(id='classification-group-dropdown',
+                            dcc.Dropdown(id='cluster-group-dropdown',
                                          options=[
 
                                              {'label': '0', 'value': 0},
@@ -412,9 +412,9 @@ app.layout = html.Div(id="homepage", children=[
                     ])
                 ]),
                 dbc.Col(width=12, lg=12, xs=12, children=[
-                    html.Div(className="classification-plot", children=[
+                    html.Div(className="cluster-plot", children=[
                         dcc.Graph(
-                            id="classification-graph-2",
+                            id="cluster-graph-2",
                         )
                     ])
                 ])
