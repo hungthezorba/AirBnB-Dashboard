@@ -20,7 +20,7 @@ MODEL_PATH_2 = "model/kmeans_am.pkl"
 with open(MODEL_PATH_2, "rb") as rf:
     kmeans_am = pickle.load(rf)
 
-MODEL_PATH_3 = "model/kmeans_host.pkl"
+MODEL_PATH_3 = "model/modeltask3"
 with open(MODEL_PATH_3, "rb") as rf:
     kmeans_host = pickle.load(rf)
 
